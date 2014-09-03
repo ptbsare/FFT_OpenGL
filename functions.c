@@ -1,4 +1,7 @@
 #include "header.h"
+static complex x[NUM];
+static int M;
+static GLfloat d[NUM];
 void add(complex a,complex b,complex *c)   /*复数加法*/
 {
     c->real=a.real+b.real;
@@ -19,7 +22,7 @@ void divi(complex a,complex b,complex *c)   /*复数除法*/
   c->real=(a.real*b.real+a.img*b.img)/(b.real*b.real+b.img*b.img);
   c->img=(a.img*b.real-a.real*b.img)/(b.real*b.real+b.img*b.img);
 }
-complex *initW(int M)                                /*生成旋转因子*/
+complex *initW()                                /*生成旋转因子*/
 {
   int i;
   complex *W;
@@ -31,7 +34,7 @@ complex *initW(int M)                                /*生成旋转因子*/
   }
   return W;
 }
-void sort(complex *x,int M)                                 /*将x(n)按照码位排序*/
+void sort()                                 /*将x(n)按照码位排序*/
   {
   complex temp;
   unsigned short i=0,j=0,k=0;
@@ -54,11 +57,11 @@ void sort(complex *x,int M)                                 /*将x(n)按照码�
   }
   }
 }
-void cal_fft(complex *x,int M,complex *W)                                /*进行FFT变换*/
+void cal_fft(complex *W)                                /*进行FFT变换*/
 {
   int i=0,j=0,k=0,l=0;
   complex up,down,product;
-  sort(x,M);
+  sort();
   for(i=0;i<log(M)/log(2);i++)
   {
   l=1<<i;
@@ -77,8 +80,7 @@ void cal_fft(complex *x,int M,complex *W)                                /*进�
 }
 void fft()
 {
-    int i,j,M;                                                          /*输入参数模块*/
-    complex x[NUM];
+    int i,j;                                                          /*输入参数模块*/
     float fc,f[10],fs;
     for(i=0;i<=9;i++)
     {
@@ -114,8 +116,8 @@ void fft()
         x[i].real=sum;
         x[i].img=0;
     }
-    complex *W=initW(M);
-    cal_fft(x,M,W);
+    complex *W=initW();
+    cal_fft(W);
     printf("FFT计算结果如下:\n");                                     /*输出计算结果模块*/
     for(i=0;i<M;i++)
     {
@@ -130,5 +132,39 @@ void fft()
     for(i=0;i<M;i++)
     {
         x[i].mo=sqrt(x[i].real*x[i].real+x[i].img*x[i].img);
+        d[i]=x[i].mo;
     }
+}
+void display()
+{
+    int i;
+    GLfloat x_d=(double)2/M;
+    GLfloat x_p=-1;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.0f,1.0f,0.0f);
+    glBegin(GL_LINES);
+    glVertex2f(-1.0f,-1.0f);
+    glVertex2f(1.0f,-1.0f);
+    glEnd();
+    glColor3f(0.0f,0.0f,1.0f);
+    glBegin(GL_LINES);
+    for(i=0;i<=M;i++)
+    {
+        glVertex2f(x_p,-1.0f);
+        glVertex2f(x_p,x[i].mo/10-1);
+        x_p+=x_d;
+    }
+    glEnd();
+    glFlush();
+}
+int draw(int argc,char *argv[])
+{
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
+    glutInitWindowPosition(100, 100);
+    glutInitWindowSize(4.7*M>=1000?4.7*M:1000, 600);
+    glutCreateWindow("Signal");
+    glutDisplayFunc(&display);
+    glutMainLoop();
+    return 0;
 }

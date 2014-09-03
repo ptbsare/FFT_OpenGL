@@ -2,4 +2,5 @@
 int main()
 {
     fft();
+    draw(NULL,NULL);
 }
