@@ -3,4 +3,5 @@ int main()
 {
     fft();
     draw();
+    return 0;
 }

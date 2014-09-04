@@ -2,7 +2,6 @@
 static complex x[NUM];
 static complex x_raw[NUM];
 static int M;
-static GLfloat d[NUM];
 void add(complex a,complex b,complex *c)   /*复数加法*/
 {
     c->real=a.real+b.real;
@@ -100,7 +99,11 @@ void fft()
         {
             printf("\n%d次谐波强度： ",i);
             scanf("%f",&f[i]);
-            if(f[i]==-1)break;
+            if(f[i]==-1)
+            {
+                f[i]=0;
+                break;
+            }
         }
     }
     printf("\n输入采样点数(2的n次方)： ");
@@ -138,21 +141,34 @@ void fft()
         x_raw[i].mo=x_raw[i].real;
     }
 }
-double max(complex *x)
+int max(complex *x)
 {
     int i;
+    int j=0;
     double max=0;
-    for(i=0;i<=M;i++)
+    for(i=M;i>=0;i--)
     {
-        if(x[i].mo>max)max=x[i].mo;
+        if(x[i].mo>max)
+        {
+            max=x[i].mo;
+            j=i;
+        }
     }
-    return max;
+    return j;
+}
+void draw_string(char* str)
+{
+    for(; *str!='\0'; ++str)
+    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24,*str);
 }
 void display1()
 {
     int i;
     GLfloat x_d=(double)2/M;
-    GLfloat x_p=-1;
+    GLfloat x_p=-1+0.005;
+    GLfloat x_p_m;
+    char str[25];
+    glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(0.0f,1.0f,0.0f);
     glBegin(GL_LINES);
@@ -160,7 +176,8 @@ void display1()
     glVertex2f(1.0f,-1.0f);
     glEnd();
     glColor3f(0.0f,0.0f,1.0f);
-    double max_=max(x);
+    double max_=x[max(x)].mo;
+    x_p_m=-fabs(-1+max(x)*x_d);
     glBegin(GL_LINES);
     for(i=0;i<=M;i++)
     {
@@ -169,6 +186,9 @@ void display1()
         x_p+=x_d;
     }
     glEnd();
+    glRasterPos2f(x_p_m, 0.9f);
+    sprintf(str,"%lg",max_);
+    draw_string(str);
     glFlush();
 }
 void display2()
@@ -176,6 +196,7 @@ void display2()
     int i;
     GLfloat x_d=(double)2/M;
     GLfloat x_p=-1;
+    glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(0.0f,1.0f,0.0f);
     glBegin(GL_LINES);
@@ -183,11 +204,10 @@ void display2()
     glVertex2f(1.0f,0.0f);
     glEnd();
     glColor3f(0.0f,0.0f,1.0f);
-    double max_=max(x_raw);
-    glBegin(GL_LINES);
+    double max_=x_raw[max(x_raw)].mo;
+    glBegin(GL_LINE_STRIP);
     for(i=0;i<=M;i++)
     {
-        glVertex2f(x_p,0.0f);
         glVertex2f(x_p,x_raw[i].mo/max_);
         x_p+=x_d;
     }
@@ -198,7 +218,7 @@ int draw1(int argc,char *argv[])
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-    glutInitWindowPosition(100, 100);
+    glutInitWindowPosition(100,100);
     glutInitWindowSize(4.7*M>=1000?4.7*M:1000, 600);
     glutCreateWindow("After FFT");
     glutDisplayFunc(&display1);
