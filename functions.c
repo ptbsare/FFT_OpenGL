@@ -1,5 +1,6 @@
 #include "header.h"
 static complex x[NUM];
+static complex x_raw[NUM];
 static int M;
 static GLfloat d[NUM];
 void add(complex a,complex b,complex *c)   /*复数加法*/
@@ -115,6 +116,8 @@ void fft()
         }
         x[i].real=sum;
         x[i].img=0;
+        x_raw[i].real=sum;
+        x_raw[i].img=0;
     }
     complex *W=initW();
     cal_fft(W);
@@ -132,10 +135,20 @@ void fft()
     for(i=0;i<M;i++)
     {
         x[i].mo=sqrt(x[i].real*x[i].real+x[i].img*x[i].img);
-        d[i]=x[i].mo;
+        x_raw[i].mo=x_raw[i].real;
     }
 }
-void display()
+double max(complex *x)
+{
+    int i;
+    double max=0;
+    for(i=0;i<=M;i++)
+    {
+        if(x[i].mo>max)max=x[i].mo;
+    }
+    return max;
+}
+void display1()
 {
     int i;
     GLfloat x_d=(double)2/M;
@@ -147,24 +160,54 @@ void display()
     glVertex2f(1.0f,-1.0f);
     glEnd();
     glColor3f(0.0f,0.0f,1.0f);
+    double max_=max(x);
     glBegin(GL_LINES);
     for(i=0;i<=M;i++)
     {
         glVertex2f(x_p,-1.0f);
-        glVertex2f(x_p,x[i].mo/10-1);
+        glVertex2f(x_p,2*x[i].mo/max_-1);
         x_p+=x_d;
     }
     glEnd();
     glFlush();
 }
-int draw(int argc,char *argv[])
+void display2()
+{
+    int i;
+    GLfloat x_d=(double)2/M;
+    GLfloat x_p=-1;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.0f,1.0f,0.0f);
+    glBegin(GL_LINES);
+    glVertex2f(-1.0f,0.0f);
+    glVertex2f(1.0f,0.0f);
+    glEnd();
+    glColor3f(0.0f,0.0f,1.0f);
+    double max_=max(x_raw);
+    glBegin(GL_LINES);
+    for(i=0;i<=M;i++)
+    {
+        glVertex2f(x_p,0.0f);
+        glVertex2f(x_p,x_raw[i].mo/max_);
+        x_p+=x_d;
+    }
+    glEnd();
+    glFlush();
+}
+int draw1(int argc,char *argv[])
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(4.7*M>=1000?4.7*M:1000, 600);
+    glutCreateWindow("After FFT");
+    glutDisplayFunc(&display1);
     glutCreateWindow("Signal");
-    glutDisplayFunc(&display);
+    glutDisplayFunc(&display2);
     glutMainLoop();
     return 0;
+}
+void draw()
+{
+    draw1(NULL,NULL);
 }
